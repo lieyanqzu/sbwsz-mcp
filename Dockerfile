@@ -1,4 +1,4 @@
-FROM node:22.12-alpine AS builder
+FROM node:22.14-alpine AS builder
 
 WORKDIR /app
 
@@ -18,6 +18,6 @@ COPY --from=builder /app/package-lock.json /app/package-lock.json
 
 ENV NODE_ENV=production
 
-RUN npm ci --ignore-ipts --omit-dev
+RUN npm ci --ignore-scripts --omit-dev
 
 ENTRYPOINT ["node", "/app/dist/index.js"] 

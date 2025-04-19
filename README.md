@@ -2,13 +2,20 @@
 
 [English](README/README.en.md) | 中文
 
+一个基于 [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) 的服务器，用于与 [大学院废墟](https://sbwsz.com/) API 交互。提供了一系列工具来查询万智牌中文卡牌信息。
+
 [![smithery badge](https://smithery.ai/badge/@lieyanqzu/sbwsz-mcp)](https://smithery.ai/server/@lieyanqzu/sbwsz-mcp)
 
 <a href="https://glama.ai/mcp/servers/@lieyanqzu/sbwsz-mcp">
   <img width="380" height="200" src="https://glama.ai/mcp/servers/@lieyanqzu/sbwsz-mcp/badge" />
 </a>
 
-一个基于 [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) 的服务器，用于与 [SBWSZ](https://sbwsz.com/) API 交互。提供了一系列工具来查询万智牌中文卡牌信息。
+## API 文档
+
+本服务器基于大学院废墟的公开 API。您可以在以下地址查看完整的 API 文档：
+
+- [大学院废墟 API 文档](https://new.sbwsz.com/api/v1/docs)
+
 
 ## 使用示例
 
@@ -32,7 +39,7 @@
 服务器支持两种运行模式：
 
 1. 标准 stdio 模式（默认）
-2. 服务器发送事件（SSE）模式，提供 HTTP 端点
+2. 无状态 Streamable HTTP 模式，提供 HTTP 端点
 
 ### 使用 NPX
 
@@ -42,8 +49,8 @@
 # Stdio 模式
 npx sbwsz-mcp-server
 
-# SSE 模式
-npx sbwsz-mcp-server --sse
+# Streamable HTTP 模式
+npx sbwsz-mcp-server --http
 ```
 
 ### 连接到服务器
@@ -52,18 +59,15 @@ npx sbwsz-mcp-server --sse
 
 你的应用程序或环境（如 Claude Desktop）可以通过 stdio 直接与服务器通信。
 
-#### SSE 模式
+#### Streamable HTTP 模式
 
-当使用 SSE 模式运行时（使用 `--sse` 参数），你可以使用 MCP CLI 连接：
-
-```bash
-npx @wong2/mcp-cli --sse http://localhost:3000/sse
-```
+当使用 Streamable HTTP 模式运行时（使用 `--http` 参数）：
 
 服务器将在以下端点可用：
 
-- SSE 端点：`http://localhost:3000/sse`
-- 消息端点：`http://localhost:3000/messages`
+- Streamable HTTP 端点：`http://localhost:3000/mcp`
+
+该模式为无状态模式，不维护会话信息，提供更简化和高效的通信方式。
 
 ### 在 claude_desktop_config.json 中集成
 
@@ -105,8 +109,8 @@ docker build -t mcp/sbwsz .
 docker run -i --rm mcp/sbwsz
 ```
 
-或在 SSE 模式下运行：
+或在 Streamable HTTP 模式下运行：
 
 ```bash
-docker run -i --rm -p 3000:3000 mcp/sbwsz --sse
+docker run -i --rm -p 3000:3000 mcp/sbwsz --http
 ```

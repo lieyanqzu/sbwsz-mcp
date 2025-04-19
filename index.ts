@@ -2,17 +2,19 @@
 
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
+import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
-  Tool
+  Tool,
+  JSONRPCError
 } from "@modelcontextprotocol/sdk/types.js";
 import fetch, { Response } from "node-fetch";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { createServer, IncomingMessage, ServerResponse } from "node:http";
 import { parse } from "node:url";
+import { randomUUID } from "node:crypto";
 
 /**
  * SBWSZ API references:
@@ -307,18 +309,12 @@ async function handleGetSetCards(
   return handleSbwszResponse(response);
 }
 
-// A map of sessionId -> { transport, server } for SSE connections
-const transportsBySession = new Map<
-  string,
-  { transport: SSEServerTransport; server: Server }
->();
-
 // 创建服务器实例
 function createSbwszServer() {
   const newServer = new Server(
     {
       name: "mcp-server/sbwsz",
-      version: "1.0.2"
+      version: "1.1.0"
     },
     {
       capabilities: {
@@ -396,71 +392,90 @@ function createSbwszServer() {
   return newServer;
 }
 
+// 创建错误响应
+function createErrorResponse(message: string): JSONRPCError {
+  return {
+    jsonrpc: '2.0',
+    error: {
+      code: -32000,
+      message: message,
+    },
+    id: randomUUID(),
+  };
+}
+
 // 启动服务器
 async function runServer() {
   const argv = await yargs(hideBin(process.argv))
-    .option("sse", {
+    .option("http", {
       type: "boolean",
-      description: "使用 SSE 传输而不是 stdio",
+      description: "使用 Streamable HTTP 传输而不是 stdio",
       default: false
     })
     .option("port", {
       type: "number",
-      description: "SSE 传输使用的端口",
+      description: "HTTP 传输使用的端口",
       default: 3000
     })
     .help().argv;
 
-  if (argv.sse) {
+  if (argv.http) {
+    // 创建一个全局的无状态Server实例
+    const sbwszServer = createSbwszServer();
+    const transport = new StreamableHTTPServerTransport({
+      sessionIdGenerator: undefined, // 设置为undefined表示无状态模式
+    });
+    
+    // 连接传输和服务器
+    await sbwszServer.connect(transport);
+    
     const httpServer = createServer(
       async (req: IncomingMessage, res: ServerResponse): Promise<void> => {
         const url = parse(req.url ?? "", true);
 
-        if (req.method === "GET" && url.pathname === "/sse") {
-          // Client establishing SSE connection
-          const transport = new SSEServerTransport("/messages", res);
-          const sbwszServer = createSbwszServer();
-
-          // Store them in our map for routing POSTs
-          transportsBySession.set(transport.sessionId, {
-            transport,
-            server: sbwszServer
-          });
-
-          // Set SSE headers
-          res.setHeader("Content-Type", "text/event-stream");
-          res.setHeader("Cache-Control", "no-cache");
-          res.setHeader("Connection", "keep-alive");
-
-          // Connect transport to server
-          sbwszServer.connect(transport).catch((err) => {
-            console.error("Error attaching SSE transport:", err);
-            res.end();
-          });
-
-          console.error(
-            `新的 SSE 连接已建立 (会话: ${transport.sessionId})`
-          );
-
-          // Return here - the response will be kept open for SSE
-          return;
-        } else if (req.method === "POST" && url.pathname === "/messages") {
-          // Client sending an MCP message over POST
-          const sessionId = url.query.sessionId as string;
-          const record = transportsBySession.get(sessionId);
-
-          if (!record) {
-            res.writeHead(404, "Unknown session");
-            res.end();
+        // 统一端点
+        if (url.pathname === "/mcp") {
+          if (req.method === "POST") {
+            // 获取请求体
+            const chunks: Buffer[] = [];
+            for await (const chunk of req) {
+              chunks.push(Buffer.from(chunk));
+            }
+            const body = Buffer.concat(chunks).toString();
+            let jsonBody;
+            
+            try {
+              jsonBody = JSON.parse(body);
+            } catch (e) {
+              res.writeHead(400, { "Content-Type": "application/json" });
+              res.end(JSON.stringify(createErrorResponse("Invalid JSON")));
+              return;
+            }
+            
+            try {
+              // 在无状态模式下，直接处理请求
+              await transport.handleRequest(req, res, jsonBody);
+            } catch (error) {
+              console.error("处理请求时出错:", error);
+              if (!res.headersSent) {
+                res.writeHead(500, { "Content-Type": "application/json" });
+                res.end(JSON.stringify(createErrorResponse("内部服务器错误")));
+              }
+            }
+            return;
+          } else {
+            // 无状态模式不支持GET/DELETE方法，直接返回405
+            res.writeHead(405, {
+              "Content-Type": "application/json",
+              "Allow": "POST"
+            });
+            res.end(JSON.stringify(createErrorResponse("Method Not Allowed")));
             return;
           }
-
-          // Forward the POST body to this session's transport
-          await record.transport.handlePostMessage(req, res);
-          return;
         } else {
+          // 任何其他路径都返回404
           res.writeHead(404, "Not Found");
-          res.end();
+          res.end(JSON.stringify(createErrorResponse("Not Found")));
           return;
         }
       }
@@ -468,7 +483,10 @@ async function runServer() {
 
     httpServer.listen(argv.port, () => {
       console.error(
-        `SBWSZ MCP 服务器监听中 http://localhost:${argv.port}`
+        `SBWSZ MCP 服务器监听中 http://localhost:${argv.port} (无状态 Streamable HTTP模式)`
+      );
+      console.error(
+        `Streamable HTTP 端点: http://localhost:${argv.port}/mcp`
       );
     });
   } else {

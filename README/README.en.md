@@ -2,13 +2,19 @@
 
 English | [中文](../README.md)
 
+A server based on [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) for interacting with the [Academy Ruins - SBWSZ](https://sbwsz.com/) API. Provides a set of tools for querying Magic: The Gathering card Chinese information.
+
 [![smithery badge](https://smithery.ai/badge/@lieyanqzu/sbwsz-mcp)](https://smithery.ai/server/@lieyanqzu/sbwsz-mcp)
 
 <a href="https://glama.ai/mcp/servers/@lieyanqzu/sbwsz-mcp">
   <img width="380" height="200" src="https://glama.ai/mcp/servers/@lieyanqzu/sbwsz-mcp/badge" />
 </a>
 
-A server based on [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) for interacting with the [Academy Ruins - SBWSZ](https://sbwsz.com/) API. Provides a set of tools for querying Magic: The Gathering card Chinese information.
+## API Documentation
+
+This server is based on the public API of Academy Ruins. You can view the complete API documentation at:
+
+- [Academy Ruins API Documentation](https://new.sbwsz.com/api/v1/docs)
 
 ## Use Case
 
@@ -32,7 +38,7 @@ A server based on [Model Context Protocol (MCP)](https://modelcontextprotocol.io
 The server supports two running modes:
 
 1. Standard stdio mode (default)
-2. Server-Sent Events (SSE) mode, providing HTTP endpoints
+2. Stateless Streamable HTTP mode, providing HTTP endpoints
 
 ### Using NPX
 
@@ -42,8 +48,8 @@ If you have Node.js installed locally:
 # Stdio mode
 npx sbwsz-mcp-server
 
-# SSE mode
-npx sbwsz-mcp-server --sse
+# Streamable HTTP mode
+npx sbwsz-mcp-server --http
 ```
 
 ### Connecting to the Server
@@ -52,18 +58,15 @@ npx sbwsz-mcp-server --sse
 
 Your application or environment (such as Claude Desktop) can communicate directly with the server through stdio.
 
-#### SSE Mode
+#### Streamable HTTP Mode
 
-When running in SSE mode (using the `--sse` parameter), you can connect using the MCP CLI:
+When running in Streamable HTTP mode (using the `--http` parameter):
 
-```bash
-npx @wong2/mcp-cli --sse http://localhost:3000/sse
-```
+The server will be available at the following endpoint:
 
-The server will be available at the following endpoints:
+- Streamable HTTP endpoint: `http://localhost:3000/mcp`
 
-- SSE endpoint: `http://localhost:3000/sse`
-- Messages endpoint: `http://localhost:3000/messages`
+This mode operates in a stateless manner, without maintaining session information, providing a simplified and more efficient communication method.
 
 ### Integration in claude_desktop_config.json
 
@@ -105,8 +108,8 @@ Then you can run in stdio mode:
 docker run -i --rm mcp/sbwsz
 ```
 
-Or in SSE mode:
+Or in Streamable HTTP mode:
 
 ```bash
-docker run -i --rm -p 3000:3000 mcp/sbwsz --sse
+docker run -i --rm -p 3000:3000 mcp/sbwsz --http
 ``` 

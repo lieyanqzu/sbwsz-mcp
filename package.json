@@ -1,6 +1,6 @@
 {
   "name": "sbwsz-mcp-server",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "用于与大学院废墟(sbwsz.com)API交互的MCP服务器",
   "license": "MIT",
   "author": "lieyanqzu",

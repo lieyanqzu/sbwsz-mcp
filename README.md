@@ -1,8 +1,18 @@
 # 大学院废墟(sbwsz.com) MCP Server
 
+[English](README/README.en.md) | 中文
+
 [![smithery badge](https://smithery.ai/badge/@lieyanqzu/sbwsz-mcp)](https://smithery.ai/server/@lieyanqzu/sbwsz-mcp)
 
-一个基于 [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) 的服务器，用于与 [SBWSZ](https://sbwsz.com/) API 交互。提供了一系列工具来查询万智牌卡牌信息。
+<a href="https://glama.ai/mcp/servers/@lieyanqzu/sbwsz-mcp">
+  <img width="380" height="200" src="https://glama.ai/mcp/servers/@lieyanqzu/sbwsz-mcp/badge" />
+</a>
+
+一个基于 [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) 的服务器，用于与 [SBWSZ](https://sbwsz.com/) API 交互。提供了一系列工具来查询万智牌中文卡牌信息。
+
+## 使用示例
+
+![使用示例](README/usecase.png)
 
 ## 功能特性
 

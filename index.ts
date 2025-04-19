@@ -28,6 +28,9 @@ import { parse } from "node:url";
  * 每个工具以JSON格式返回数据。
  */
 
+// 定义基础URL
+const BASE_URL = "https://new.sbwsz.com/api/v1";
+
 // 错误响应格式
 interface SbwszError {
   message: string;
@@ -175,13 +178,6 @@ const GET_SET_CARDS_TOOL: Tool = {
   }
 };
 
-// 添加获取单个系列处理函数
-async function handleGetSet(setCode: string) {
-  const url = `https://new.sbwsz.com/api/v1/set/${encodeURIComponent(setCode.toUpperCase())}`;
-  const response = await fetch(url);
-  return handleSbwszResponse(response);
-}
-
 // 返回我们的工具集
 const SBWSZ_TOOLS = [
   GET_CARD_BY_SET_AND_NUMBER_TOOL,
@@ -190,6 +186,13 @@ const SBWSZ_TOOLS = [
   GET_SET_TOOL,
   GET_SET_CARDS_TOOL
 ] as const;
+
+// 添加获取单个系列处理函数
+async function handleGetSet(setCode: string) {
+  const url = `${BASE_URL}/set/${encodeURIComponent(setCode.toUpperCase())}`;
+  const response = await fetch(url);
+  return handleSbwszResponse(response);
+}
 
 // 处理响应的通用函数
 async function handleSbwszResponse(response: Response) {
@@ -240,7 +243,7 @@ async function handleSbwszResponse(response: Response) {
 
 // 处理工具调用
 async function handleGetCardBySetAndNumber(set: string, collectorNumber: string) {
-  const url = `https://new.sbwsz.com/api/v1/card/${encodeURIComponent(set)}/${encodeURIComponent(collectorNumber)}`;
+  const url = `${BASE_URL}/card/${encodeURIComponent(set)}/${encodeURIComponent(collectorNumber)}`;
   const response = await fetch(url);
   return handleSbwszResponse(response);
 }
@@ -255,7 +258,7 @@ async function handleSearchCards(
   priorityChinese?: boolean
 ) {
   // 构建查询 URL
-  let url = `https://new.sbwsz.com/api/v1/result?q=${encodeURIComponent(q)}`;
+  let url = `${BASE_URL}/result?q=${encodeURIComponent(q)}`;
   
   // 添加可选参数
   if (page !== undefined) url += `&page=${page}`;
@@ -270,7 +273,36 @@ async function handleSearchCards(
 
 // 添加获取所有系列处理函数
 async function handleGetSets() {
-  const url = "https://new.sbwsz.com/api/v1/sets";
+  const url = `${BASE_URL}/sets`;
+  const response = await fetch(url);
+  return handleSbwszResponse(response);
+}
+
+
+// 添加获取系列卡牌处理函数
+async function handleGetSetCards(
+  setCode: string,
+  page?: number,
+  pageSize?: number,
+  order?: string,
+  priorityChinese?: boolean
+) {
+  // 构建基础 URL
+  let url = `${BASE_URL}/set/${encodeURIComponent(setCode.toUpperCase())}/cards`;
+
+  // 添加查询参数
+  const params = new URLSearchParams();
+  if (page !== undefined) params.append('page', page.toString());
+  if (pageSize !== undefined) params.append('page_size', pageSize.toString());
+  if (order !== undefined) params.append('order', order);
+  if (priorityChinese !== undefined) params.append('priority_chinese', priorityChinese.toString());
+
+  // 如果有查询参数，添加到 URL
+  const queryString = params.toString();
+  if (queryString) {
+    url += `?${queryString}`;
+  }
+
   const response = await fetch(url);
   return handleSbwszResponse(response);
 }
@@ -286,7 +318,7 @@ function createSbwszServer() {
   const newServer = new Server(
     {
       name: "mcp-server/sbwsz",
-      version: "0.1.0"
+      version: "1.0.2"
     },
     {
       capabilities: {
@@ -446,34 +478,6 @@ async function runServer() {
     await server.connect(transport);
     console.error("SBWSZ MCP 服务器在 stdio 上运行");
   }
-}
-
-// 添加获取系列卡牌处理函数
-async function handleGetSetCards(
-  setCode: string,
-  page?: number,
-  pageSize?: number,
-  order?: string,
-  priorityChinese?: boolean
-) {
-  // 构建基础 URL
-  let url = `https://new.sbwsz.com/api/v1/set/${encodeURIComponent(setCode.toUpperCase())}/cards`;
-
-  // 添加查询参数
-  const params = new URLSearchParams();
-  if (page !== undefined) params.append('page', page.toString());
-  if (pageSize !== undefined) params.append('page_size', pageSize.toString());
-  if (order !== undefined) params.append('order', order);
-  if (priorityChinese !== undefined) params.append('priority_chinese', priorityChinese.toString());
-
-  // 如果有查询参数，添加到 URL
-  const queryString = params.toString();
-  if (queryString) {
-    url += `?${queryString}`;
-  }
-
-  const response = await fetch(url);
-  return handleSbwszResponse(response);
 }
 
 runServer().catch((error) => {

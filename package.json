@@ -1,6 +1,6 @@
 {
   "name": "sbwsz-mcp-server",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "用于与大学院废墟(sbwsz.com)API交互的MCP服务器",
   "license": "MIT",
   "author": "lieyanqzu",
@@ -28,7 +28,6 @@
     "@types/node": "^22",
     "@types/node-fetch": "^2.6.2",
     "@types/yargs": "^17.0.32",
-    "@types/express": "^4.17.21",
     "shx": "^0.3.4",
     "typescript": "^5.6.2",
     "tsx": "^4.7.0"

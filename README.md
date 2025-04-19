@@ -12,7 +12,7 @@
 
 ## 使用示例
 
-![使用示例](README/usecase.png)
+![使用示例](README/use_case.png)
 
 ## 功能特性
 

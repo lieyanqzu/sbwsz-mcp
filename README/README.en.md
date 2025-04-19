@@ -12,7 +12,7 @@ A server based on [Model Context Protocol (MCP)](https://modelcontextprotocol.io
 
 ## Use Case
 
-![Use Case](../README/usecase.png)
+![Use Case](../README/use_case_en.png)
 
 ## Features
 

@@ -1,4 +1,6 @@
-# SBWSZ MCP Server
+# 大学院废墟(sbwsz.com) MCP Server
+
+[![smithery badge](https://smithery.ai/badge/@lieyanqzu/sbwsz-mcp)](https://smithery.ai/server/@lieyanqzu/sbwsz-mcp)
 
 一个基于 [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) 的服务器，用于与 [SBWSZ](https://sbwsz.com/) API 交互。提供了一系列工具来查询万智牌卡牌信息。
 

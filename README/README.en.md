@@ -32,6 +32,8 @@ This server is based on the public API of Academy Ruins. You can view the comple
   Get detailed information about a single set.
 - **get_set_cards**  
   Get all cards from a specific set, with support for pagination and sorting.
+- **hzls**  
+  Creates a composite image by arranging Chinese Magic card name sections to spell out the input sentence.
 
 ## Usage
 

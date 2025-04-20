@@ -2,7 +2,7 @@
 
 [English](README/README.en.md) | 中文
 
-一个基于 [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) 的服务器，用于与 [大学院废墟](https://sbwsz.com/) API 交互。提供了一系列工具来查询万智牌中文卡牌信息。
+一个基于 [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) 的服务端，用于与 [大学院废墟](https://sbwsz.com/) API 交互。提供了一系列工具来查询万智牌中文卡牌信息。
 
 [![smithery badge](https://smithery.ai/badge/@lieyanqzu/sbwsz-mcp)](https://smithery.ai/server/@lieyanqzu/sbwsz-mcp)
 
@@ -12,7 +12,7 @@
 
 ## API 文档
 
-本服务器基于大学院废墟的公开 API。您可以在以下地址查看完整的 API 文档：
+本服务端基于大学院废墟的公开 API。您可以在以下地址查看完整的 API 文档：
 
 - [大学院废墟 API 文档](https://new.sbwsz.com/api/v1/docs)
 
@@ -33,10 +33,12 @@
   获取单个系列的详细信息。
 - **get_set_cards**  
   获取特定系列的所有卡牌，支持分页和排序。
+- **hzls**  
+  活字乱刷，将输入的文本使用万智牌卡牌图像拼接成图片。
 
 ## 使用方法
 
-服务器支持两种运行模式：
+服务端支持两种运行模式：
 
 1. 标准 stdio 模式（默认）
 2. 无状态 Streamable HTTP 模式，提供 HTTP 端点
@@ -53,17 +55,17 @@ npx sbwsz-mcp-server
 npx sbwsz-mcp-server --http
 ```
 
-### 连接到服务器
+### 连接到服务端
 
 #### Stdio 模式
 
-你的应用程序或环境（如 Claude Desktop）可以通过 stdio 直接与服务器通信。
+你的应用程序或环境（如 Claude Desktop）可以通过 stdio 直接与服务端通信。
 
 #### Streamable HTTP 模式
 
 当使用 Streamable HTTP 模式运行时（使用 `--http` 参数）：
 
-服务器将在以下端点可用：
+服务端将在以下端点可用：
 
 - Streamable HTTP 端点：`http://localhost:3000/mcp`
 

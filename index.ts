@@ -20,12 +20,13 @@ import { randomUUID } from "node:crypto";
  * SBWSZ API references:
  *  - https://new.sbwsz.com/api/v1/docs
  *
- * 服务器提供以下工具:
+ * 服务端提供以下工具:
  * 1) get_card_by_set_and_number - 通过系列代码和收集编号获取单张卡牌
  * 2) search_cards               - 通过查询字符串搜索卡牌（支持分页和排序）
- * 3) get_sets                  - 获取所有卡牌系列
- * 4) get_set                   - 获取单个系列的详细信息
- * 5) get_set_cards            - 获取特定系列的所有卡牌
+ * 3) get_sets                   - 获取所有卡牌系列
+ * 4) get_set                    - 获取单个系列的详细信息
+ * 5) get_set_cards              - 获取特定系列的所有卡牌
+ * 6) hzls                       - 活字乱刷（使用卡牌图像拼接句子）
  *
  * 每个工具以JSON格式返回数据。
  */
@@ -66,6 +67,11 @@ const GET_CARD_BY_SET_AND_NUMBER_TOOL: Tool = {
       }
     },
     required: ["set", "collector_number"]
+  },
+  annotations: {
+    title: "由系列代码和收集编号获取单张卡牌",
+    readOnlyHint: true,
+    openWorldHint: true
   }
 };
 
@@ -118,6 +124,11 @@ const SEARCH_CARDS_TOOL: Tool = {
       }
     },
     required: ["q"]
+  },
+  annotations: {
+    title: "通过查询字符串搜索卡牌",
+    readOnlyHint: true,
+    openWorldHint: true
   }
 };
 
@@ -129,6 +140,11 @@ const GET_SETS_TOOL: Tool = {
     type: "object",
     properties: {},
     required: []
+  },
+  annotations: {
+    title: "获取所有卡牌系列",
+    readOnlyHint: true,
+    openWorldHint: true
   }
 };
 
@@ -145,6 +161,11 @@ const GET_SET_TOOL: Tool = {
       }
     },
     required: ["set_code"]
+  },
+  annotations: {
+    title: "获取单个系列的详细信息",
+    readOnlyHint: true,
+    openWorldHint: true
   }
 };
 
@@ -177,6 +198,40 @@ const GET_SET_CARDS_TOOL: Tool = {
       }
     },
     required: ["set_code"]
+  },
+  annotations: {
+    title: "获取特定系列的所有卡牌",
+    readOnlyHint: true,
+    openWorldHint: true
+  }
+};
+
+// 添加卡牌图像拼接句子工具
+const HZLS_TOOL: Tool = {
+  name: "hzls",
+  description: "活字乱刷（使用卡牌图像拼接句子），将输入的文本使用魔法卡牌图像拼接成图片",
+  inputSchema: {
+    type: "object",
+    properties: {
+      target_sentence: {
+        type: "string",
+        description: "要拼接的目标句子/文本"
+      },
+      cut_full_image: {
+        type: "boolean",
+        description: "是否使用卡牌完整图像 (默认 true)"
+      },
+      with_link: {
+        type: "boolean",
+        description: "是否包含链接水印 (默认 true)"
+      }
+    },
+    required: ["target_sentence"]
+  },
+  annotations: {
+    title: "使用卡牌图像拼接句子",
+    readOnlyHint: true,
+    openWorldHint: true
   }
 };
 
@@ -186,7 +241,8 @@ const SBWSZ_TOOLS = [
   SEARCH_CARDS_TOOL,
   GET_SETS_TOOL,
   GET_SET_TOOL,
-  GET_SET_CARDS_TOOL
+  GET_SET_CARDS_TOOL,
+  HZLS_TOOL
 ] as const;
 
 // 添加获取单个系列处理函数
@@ -280,7 +336,6 @@ async function handleGetSets() {
   return handleSbwszResponse(response);
 }
 
-
 // 添加获取系列卡牌处理函数
 async function handleGetSetCards(
   setCode: string,
@@ -309,12 +364,80 @@ async function handleGetSetCards(
   return handleSbwszResponse(response);
 }
 
-// 创建服务器实例
+// 添加卡牌图像拼接句子处理函数
+async function handleHzls(
+  targetSentence: string,
+  cutFullImage?: boolean,
+  withLink?: boolean
+) {
+  // 构建基础 URL
+  let url = `${BASE_URL}/hzls?target_sentence=${encodeURIComponent(targetSentence)}`;
+
+  // 添加可选参数
+  if (cutFullImage !== undefined) url += `&cut_full_image=${cutFullImage}`;
+  if (withLink !== undefined) url += `&with_link=${withLink}`;
+
+  try {
+    const response = await fetch(url);
+    
+    // 处理错误响应
+    if (!response.ok) {
+      const errorText = await response.text().catch(() => "");
+      return {
+        content: [
+          {
+            type: "text",
+            text: `HTTP 错误 ${response.status}: ${response.statusText}${errorText ? `\n响应内容: ${errorText}` : ""}`
+          }
+        ],
+        isError: true
+      };
+    }
+    
+    // 处理成功响应 - 读取图片数据
+    const buffer = await response.arrayBuffer();
+    const base64Data = Buffer.from(buffer).toString('base64');
+    const contentType = response.headers.get('content-type') || 'image/jpeg';
+    
+    // 返回图像内容
+    return {
+      content: [
+        {
+          type: "text",
+          text: `活字乱刷成功生成图片`
+        },
+        {
+          type: "image",
+          data: base64Data,
+          mimeType: contentType
+        }
+      ],
+      isError: false
+    };
+  } catch (error) {
+    // 捕获所有其他错误（网络错误、解析错误等）
+    return {
+      content: [
+        {
+          type: "text",
+          text: `活字乱刷请求失败: ${(error as Error).message}` 
+        },
+        {
+          type: "text",
+          text: `活字乱刷成功生成图片链接：\n${url}`
+        }
+      ],
+      isError: true
+    };
+  }
+}
+
+// 创建服务端实例
 function createSbwszServer() {
   const newServer = new Server(
     {
       name: "mcp-server/sbwsz",
-      version: "1.1.0"
+      version: "1.2.0"
     },
     {
       capabilities: {
@@ -365,6 +488,14 @@ function createSbwszServer() {
           };
           return await handleGetSetCards(set_code, page, page_size, order, priority_chinese);
         }
+        case "hzls": {
+          const { target_sentence, cut_full_image, with_link } = args as {
+            target_sentence: string;
+            cut_full_image?: boolean;
+            with_link?: boolean;
+          };
+          return await handleHzls(target_sentence, cut_full_image, with_link);
+        }
         default:
           return {
             content: [
@@ -404,7 +535,7 @@ function createErrorResponse(message: string): JSONRPCError {
   };
 }
 
-// 启动服务器
+// 启动服务端
 async function runServer() {
   const argv = await yargs(hideBin(process.argv))
     .option("http", {
@@ -426,7 +557,7 @@ async function runServer() {
       sessionIdGenerator: undefined, // 设置为undefined表示无状态模式
     });
     
-    // 连接传输和服务器
+    // 连接传输和服务端
     await sbwszServer.connect(transport);
     
     const httpServer = createServer(
@@ -459,7 +590,7 @@ async function runServer() {
               console.error("处理请求时出错:", error);
               if (!res.headersSent) {
                 res.writeHead(500, { "Content-Type": "application/json" });
-                res.end(JSON.stringify(createErrorResponse("内部服务器错误")));
+                res.end(JSON.stringify(createErrorResponse("内部服务端错误")));
               }
             }
             return;
@@ -483,7 +614,7 @@ async function runServer() {
 
     httpServer.listen(argv.port, () => {
       console.error(
-        `SBWSZ MCP 服务器监听中 http://localhost:${argv.port} (无状态 Streamable HTTP模式)`
+        `SBWSZ MCP 服务端监听中 http://localhost:${argv.port} (无状态 Streamable HTTP模式)`
       );
       console.error(
         `Streamable HTTP 端点: http://localhost:${argv.port}/mcp`
@@ -494,11 +625,11 @@ async function runServer() {
     const server = createSbwszServer();
     const transport = new StdioServerTransport();
     await server.connect(transport);
-    console.error("SBWSZ MCP 服务器在 stdio 上运行");
+    console.error("SBWSZ MCP 服务端在 stdio 上运行");
   }
 }
 
 runServer().catch((error) => {
-  console.error("启动 SBWSZ 服务器时发生致命错误:", error);
+  console.error("启动 SBWSZ 服务端时发生致命错误:", error);
   process.exit(1);
 });

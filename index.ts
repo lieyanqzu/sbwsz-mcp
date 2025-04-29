@@ -18,7 +18,7 @@ import { randomUUID } from "node:crypto";
 
 /**
  * SBWSZ API references:
- *  - https://new.sbwsz.com/api/v1/docs
+ *  - https://www.sbwsz.com/api/v1/docs
  *
  * 服务端提供以下工具:
  * 1) get_card_by_set_and_number - 通过系列代码和收集编号获取单张卡牌
@@ -32,7 +32,7 @@ import { randomUUID } from "node:crypto";
  */
 
 // 定义基础URL
-const BASE_URL = "https://new.sbwsz.com/api/v1";
+const BASE_URL = "https://www.sbwsz.com/api/v1";
 
 // 错误响应格式
 interface SbwszError {

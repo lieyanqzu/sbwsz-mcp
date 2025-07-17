@@ -1,3 +1,5 @@
+[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/lieyanqzu-sbwsz-mcp-badge.png)](https://mseep.ai/app/lieyanqzu-sbwsz-mcp)
+
 # 大学院废墟(sbwsz.com) MCP Server
 
 [English](README/README.en.md) | 中文

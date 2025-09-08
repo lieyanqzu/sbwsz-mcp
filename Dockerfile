@@ -15,7 +15,7 @@ RUN npm ci
 RUN npm run build
 
 # 清理dev依赖以减小镜像大小
-RUN npm ci --only=production && npm cache clean --force
+RUN npm ci --omit=dev --ignore-scripts && npm cache clean --force
 
 # 设置传输模式为HTTP
 ENV TRANSPORT=http

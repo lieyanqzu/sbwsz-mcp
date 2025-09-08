@@ -1,23 +1,22 @@
-FROM node:22.14-alpine AS builder
+FROM node:22-slim
 
+# 设置工作目录
 WORKDIR /app
 
-COPY . /app
+# 复制package文件
+COPY package*.json ./
 
-RUN --mount=type=cache,target=/root/.npm npm install
+# 安装所有依赖（需要dev依赖来编译TypeScript）
+RUN npm ci
 
-RUN --mount=type=cache,target=/root/.npm-production npm ci --ignore-scripts --omit-dev
+# 复制源代码
+COPY . .
 
-FROM node:22-alpine AS release
+# 构建TypeScript代码
+RUN npm run build
 
-WORKDIR /app
+# 设置传输模式为HTTP
+ENV TRANSPORT=http
 
-COPY --from=builder /app/dist /app/dist
-COPY --from=builder /app/package.json /app/package.json
-COPY --from=builder /app/package-lock.json /app/package-lock.json
-
-ENV NODE_ENV=production
-
-RUN npm ci --ignore-scripts --omit-dev
-
-ENTRYPOINT ["node", "/app/dist/index.js"] 
+# 直接用node启动服务器
+CMD ["node", "dist/index.js"] 

@@ -3,17 +3,15 @@ FROM node:22-slim
 # 设置工作目录
 WORKDIR /app
 
-# 复制package文件
+# 复制所有必要文件
 COPY package*.json ./
+COPY tsconfig.json ./
+COPY index.ts ./
 
-# 安装所有依赖（需要dev依赖来编译TypeScript）
+# 安装所有依赖
 RUN npm ci
 
-# 复制源代码和配置文件
-COPY index.ts ./
-COPY tsconfig.json ./
-
-# 构建TypeScript代码
+# 构建TypeScript代码（如果prepare脚本没有执行）
 RUN npm run build
 
 # 清理dev依赖以减小镜像大小

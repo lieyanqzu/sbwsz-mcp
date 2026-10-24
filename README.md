@@ -4,7 +4,7 @@
 
 一个基于 [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) 的服务端，用于与 [大学院废墟](https://sbwsz.com/) API 交互。提供了一系列工具来查询万智牌中文卡牌信息。
 
-[![smithery badge](https://smithery.ai/badge/@lieyanqzu/sbwsz-mcp)](https://smithery.ai/server/@lieyanqzu/sbwsz-mcp)
+[![LightNow capabilities](https://lightnow.ai/badge/io.github.lieyanqzu/sbwsz-mcp)](https://lightnow.ai/servers/io.github.lieyanqzu/sbwsz-mcp)
 
 <a href="https://glama.ai/mcp/servers/@lieyanqzu/sbwsz-mcp">
   <img width="380" height="200" src="https://glama.ai/mcp/servers/@lieyanqzu/sbwsz-mcp/badge" />
